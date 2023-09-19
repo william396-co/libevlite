@@ -28,8 +28,8 @@ endif
 
 # 默认选项
 LFLAGS		= -ggdb -lpthread
-CFLAGS		= -Wall -Wformat=0 -Iinclude/ -Isrc/ -Itest/ -ggdb -fPIC -O2 -DNDEBUG -D__EVENT_VERSION__=\"$(REALNAME)\" -DUSE_ATOMIC #-DUSE_REUSESESSION
-CXXFLAGS	= -Wall -Wformat=0 -Iinclude/ -Isrc/ -Itest/ -ggdb -fPIC -O2 -DNDEBUG -D__EVENT_VERSION__=\"$(REALNAME)\" -DUSE_ATOMIC #-DUSE_REUSESESSION
+CFLAGS		= -lpthread  -Wall -Wformat=0 -Iinclude/ -Isrc/ -Itest/ -ggdb -fPIC -O2 -DNDEBUG -D__EVENT_VERSION__=\"$(REALNAME)\" -DUSE_ATOMIC #-DUSE_REUSESESSION
+CXXFLAGS	= -lpthread -Wall -Wformat=0 -Iinclude/ -Isrc/ -Itest/ -ggdb -fPIC -O2 -DNDEBUG -D__EVENT_VERSION__=\"$(REALNAME)\" -DUSE_ATOMIC #-DUSE_REUSESESSION
 
 # 动态库编译选项
 ifeq ($(OS),Darwin)
@@ -91,7 +91,7 @@ $(REALNAME) : $(OBJS)
 	rm -rf $(SONAME); ln -s $@ $(SONAME)
 	rm -rf $(LIBNAME); ln -s $@ $(LIBNAME)
 
-test : test_multicurl pingpong_client test_events test_addtimer test_queue test_sidlist echoserver-lock echoserver iothreads_dispatcher
+test : test_multicurl pingpong_client test_events test_addtimer test_queue test_sidlist echoserver kcp
 
 test_events : test_events.o $(OBJS)
 	$(CC) $^ -o $@ $(LFLAGS)
@@ -143,6 +143,14 @@ pingpong_client : pingpongclient.o $(OBJS)
 test_multicurl :  xcurl.o test_multicurl.o $(OBJS)
 	$(CXX) $^ -o $@ $(LFLAGS) -lcurl
 
+kcp: kcp_client kcp_server 
+
+kcp_client: io.o kcp_client.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS) 
+
+kcp_server: io.o kcp_server.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS) 
+
 clean :
 	rm -rf *.o
 	rm -rf *.log
@@ -166,6 +174,6 @@ clean :
 	$(CC) $(CFLAGS) -Wno-unused-function -c $^ -o $@
 
 %.o : %.cpp
-	$(CXX) $(CXXFLAGS) -std=c++11 -Wno-unused-function -Itest/ -Iexamples/ -c $^ -o $@
+	$(CXX) $(CXXFLAGS) -std=c++17 -Wno-unused-function -Itest/ -Iexamples/ -c $^ -o $@
 
 VPATH = src:include:test:examples
