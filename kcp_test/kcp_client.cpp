@@ -30,7 +30,7 @@ int main( int argc, char ** argv )
     int mode = 0;
     std::string ip = default_ip;
     uint16_t port = default_port;
-    size_t max_len = default_max_len;
+    int max_len = default_max_len;
     int test_times = default_test_times;
     int lost_rate = default_lost_rate;
     int send_interval = default_send_interval;
