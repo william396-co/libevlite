@@ -19,16 +19,24 @@ public:
 
     virtual ssize_t onProcess( const char * buf, size_t nbytes ) override
     {
+        printf( "%s size:%lu\n", __FUNCTION__, nbytes );
         char buf_[BUFF_SIZE];
         bzero( buf_, sizeof( buf_ ) );
         memcpy( buf_, buf, nbytes );
-        uint32_t sn = *(uint32_t *)buf;
-        if ( show_data ) {
-            printf( "Recv sn:[%d] size:[%d] content:[%s]\n", sn, nbytes, &buf_[8] );
-        } else {
-            printf( "Recv sn:[%d] size:[%d]\n", sn, nbytes );
+        char * ptr_ = buf_;
+        while ( size_t( ptr_ - buf_ ) < nbytes ) {
+            uint32_t sn = *(uint32_t *)ptr_;
+            uint32_t sz = *(uint32_t *)( ptr_ + 8 );
+
+            if ( show_data ) {
+                printf( "Recv sn:[%d] size:[%u] content:[%s]\n", sn, sz + 12, &ptr_[12] );
+            } else {
+                printf( "Recv sn:[%d] size:[%u]\n", sn, sz + 12 );
+            }
+            printf( "Send sn:[%d] size:[%u]\n", sn, sz + 12 );
+            send( ptr_, sz + 12 );
+            ptr_ += ( 12 + sz ); // ptr move forward
         }
-        send( buf_, nbytes );
         return nbytes;
     }
 
@@ -100,12 +108,12 @@ int main( int argc, char ** argv )
         port = atoi( argv[1] );
     }
 
-    std::unique_ptr<ListenSession> listen = std::make_unique<ListenSession>( 4, 20000 );
+    std::unique_ptr<ListenSession> listen = std::make_unique<ListenSession>(4, 20000 );
     listen->start();
 
     printf( "Usage: <%s> port:<%d> starting running\n", argv[0], port );
 
-    if ( !listen->listen( NetType::KCP, "127.0.0.1", port, nullptr ) ) {
+    if ( !listen->listen( NetType::KCP, "0.0.0.0", port, nullptr ) ) {
 
         printf( "server listen [%d] failed\n", port );
         return -2;
