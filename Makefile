@@ -143,12 +143,15 @@ pingpong_client : pingpongclient.o $(OBJS)
 test_multicurl :  xcurl.o test_multicurl.o $(OBJS)
 	$(CXX) $^ -o $@ $(LFLAGS) -lcurl
 
-kcp: kcp_client kcp_server 
+kcp: kcp_client kcp_server kcp_multi_client 
 
 kcp_client: io.o kcp_client.o client.o udpsocket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) 
 
 kcp_server: io.o kcp_server.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS) 
+
+kcp_multi_client: io.o kcp_multi_client.o client.o udpsocket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) 
 
 clean :
@@ -165,7 +168,7 @@ clean :
 	rm -rf test_queue test_sidlist
 	rm -rf chatroom_client chatroom_server
 	rm -rf test_multicurl test_addtimer echoclient echostress raw_echoserver echoserver pingpong echoserver-lock iothreads_dispatcher redis_client pingpong_client
-	rm -rf kcp_server kcp_client
+	rm -rf kcp_server kcp_client kcp_multi_client
 
 # --------------------------------------------------------
 #
