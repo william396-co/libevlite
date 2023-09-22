@@ -111,8 +111,7 @@ void Client::run()
         if ( auto_test && util::now_ms() - current_ >= send_interval ) {
             if ( sn >= test_count ) {
                 printf( "finished auto send times=%d\n", sn );
-                ikcp_update( kcp, util::iclock() );
-                is_running = false;
+                auto_test = false;
             }
 
             current_ = util::now_ms();

@@ -12,6 +12,7 @@ constexpr auto default_max_len = 2000;
 constexpr auto default_test_times = 10;
 constexpr auto default_lost_rate = 0;
 constexpr auto default_send_interval = 30; // ms
+constexpr auto default_client_cnt = 10;
 
 bool g_running = true;
 
@@ -42,57 +43,24 @@ int main( int argc, char ** argv )
 {
     handle_signal();
 
-    int mode = 0;
+    int mode = 2;
     uint16_t port = default_port;
     std::string ip = default_ip;
     int max_len = default_max_len;
     int test_times = default_test_times;
     int lost_rate = default_lost_rate;
     int send_interval = default_send_interval;
+    int client_cnt = default_client_cnt;
 
-    if ( argc >= 2 ) {
-        ip = argv[1];
+    if ( argc > 1 ) {
+        client_cnt = atoi( argv[1] );
     }
 
-    if ( argc >= 3 ) {
-        port = atoi( argv[2] );
-    }
-
-    if ( argc >= 4 ) {
-        mode = atoi( argv[3] );
-    }
-
-    if ( argc >= 5 ) {
-        max_len = atoi( argv[4] );
-    }
-
-    if ( argc >= 6 ) {
-        test_times = atoi( argv[5] );
-    }
-
-    if ( argc >= 7 ) {
-        lost_rate = atoi( argv[6] );
-    }
-
-    if ( argc >= 8 ) {
-        send_interval = atoi( argv[7] );
-    }
-
-    printf( "Usage:<%s> <ip>:%s <port>:%d  <mode>:%s <max_len>:%d <times>:%d <lost_rate>:%d% <send_interval>:%dms\n",
-        argv[0],
-        ip.c_str(),
-        port,
-        util::get_mode_name( mode ),
-        max_len,
-        test_times,
-        lost_rate,
-        send_interval );
-
-    constexpr auto client_cnt = 100;
+    printf( "Usage:<%s> ClientCount:%d\n", argv[0], client_cnt );
 
     std::vector<std::unique_ptr<Client>> clients;
     for ( int i = 0; i != client_cnt; ++i ) {
-        clients.push_back( start_client( i + 1, ip.c_str(), port, mode, max_len, test_times, lost_rate ) );
+        clients.push_back( start_client( i + 1, ip.c_str(), port, mode, max_len, test_times, lost_rate, send_interval ) );
     }
 
     std::vector<joining_thread> threads;
