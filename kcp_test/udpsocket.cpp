@@ -21,7 +21,7 @@ bool UdpSocket::bind( uint16_t port )
     m_local_addr.sin_addr.s_addr = htonl( INADDR_ANY ); // 接收任意IP发来的数据
 
     setSocketopt();
-
+    setNonblocking();
     if ( ::bind( m_fd, (struct sockaddr *)&m_local_addr, sizeof( m_local_addr ) ) == -1 ) {
         close();
         return false;
@@ -37,6 +37,7 @@ bool UdpSocket::connect( const char * ip, uint16_t port )
     m_remote_addr.sin_addr.s_addr = inet_addr( ip );
 
     setSocketopt();
+    setNonblocking();
     int rc = ::connect( m_fd, (struct sockaddr *)&m_remote_addr, sizeof( m_remote_addr ) );
     if ( rc == -1 && errno != EINTR && errno != EINPROGRESS ) { // Ignore EINTR/EINPROGRESS
         close();

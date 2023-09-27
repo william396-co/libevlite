@@ -148,11 +148,20 @@ kcp: kcp_client kcp_server kcp_multi_client
 kcp_client: io.o kcp_client.o client.o udpsocket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) 
 
+
 kcp_server: io.o kcp_server.o $(OBJS)
-	$(CXX) $^ -o $@ $(CXXFLAGS) 
+	$(CXX) $^ -o $@ $(CXXFLAGS)
 
 kcp_multi_client: io.o kcp_multi_client.o client.o udpsocket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) 
+
+tcp: tcp_client tcp_server
+
+tcp_client: io.o kcp_client.o client.o udpsocket.o socket.o util.o random_util.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS)
+
+tcp_server: io.o kcp_server.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS)
 
 clean :
 	rm -rf *.o
@@ -169,6 +178,7 @@ clean :
 	rm -rf chatroom_client chatroom_server
 	rm -rf test_multicurl test_addtimer echoclient echostress raw_echoserver echoserver pingpong echoserver-lock iothreads_dispatcher redis_client pingpong_client
 	rm -rf kcp_server kcp_client kcp_multi_client
+	rm -rf tcp_server tcp_client
 
 # --------------------------------------------------------
 #
@@ -178,6 +188,6 @@ clean :
 	$(CC) $(CFLAGS) -Wno-unused-function -c $^ -o $@
 
 %.o : %.cpp
-	$(CXX) $(CXXFLAGS) -std=c++17 -Wno-unused-function -Ikcp_test -Itest/ -Iexamples/ -c $^ -o $@
+	$(CXX) $(CXXFLAGS) -DUSE_TCP -std=c++17 -Wno-unused-function -Ikcp_test -Itest/ -Iexamples/ -c $^ -o $@
 
 VPATH = src:include:test:examples:kcp_test

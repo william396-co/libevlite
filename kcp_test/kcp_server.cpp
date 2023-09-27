@@ -54,7 +54,7 @@ public:
 
     virtual void onShutdown( int32_t way ) override
     {
-        printf( "the session (SID=%ld): shutdown on way:%d\n", id(), way );
+        printf( "the session (SID=%ld port:%d): shutdown on way:%d\n", id(), port(), way );
     }
 
     void set_lost_rate( int lost_rate_ )
@@ -85,7 +85,7 @@ public:
         printf( "%ld, [%s:%d]\n", id, host, port );
         auto s = new ClientSession();
         s->set_lost_rate( 10 );
-        s->set_show_data( false );
+        //        s->set_show_data( true );
         //  s->setWindowSize( 128, 128 );
         return s;
     }
@@ -108,12 +108,16 @@ int main( int argc, char ** argv )
         port = atoi( argv[1] );
     }
 
-    std::unique_ptr<ListenSession> listen = std::make_unique<ListenSession>(4, 20000 );
+    std::unique_ptr<ListenSession> listen = std::make_unique<ListenSession>( 4, 20000 );
     listen->start();
 
     printf( "Usage: <%s> port:<%d> starting running\n", argv[0], port );
 
-    if ( !listen->listen( NetType::KCP, "0.0.0.0", port, nullptr ) ) {
+#ifndef USE_TCP
+    if ( !listen->listen( NetType::KCP, "127.0.0.1", port, nullptr ) ) {
+#else
+    if ( !listen->listen( NetType::TCP, "127.0.0.1", port, nullptr ) ) {
+#endif
 
         printf( "server listen [%d] failed\n", port );
         return -2;

@@ -4,8 +4,12 @@
 #include <string>
 
 #include "util.h"
+#ifndef USE_TCP
 #include "udpsocket.h"
 #include "ikcp.h"
+#else
+#include "socket.h"
+#endif
 
 class Client
 {
@@ -26,7 +30,7 @@ public:
     void setlostrate( int lostrate )
     {
         lost_rate = lostrate;
-        socket->setLostrate( lostrate / 2 );
+        socket_->setLostrate( lostrate / 2 );
     }
     void setsendinterval( int sendinterval )
     {
@@ -51,8 +55,12 @@ private:
     void recv( const char * data, size_t len );
 
 private:
-    std::unique_ptr<UdpSocket> socket;
+#ifndef USE_TCP
+    std::unique_ptr<UdpSocket> socket_;
     ikcpcb * kcp;
+#else
+    std::unique_ptr<Socket> socket_;
+#endif
     int md;
     int str_max_len;
     bool auto_test = false;

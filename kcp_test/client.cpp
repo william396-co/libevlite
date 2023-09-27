@@ -14,27 +14,36 @@ void rand_str( std::string & str, size_t max = 2000 )
 }
 
 Client::Client( const char * ip, uint16_t port, uint32_t conv )
-    : socket { nullptr }, md { 0 }
+    : socket_ { nullptr }, md { 0 }
 {
-    socket = std::make_unique<UdpSocket>();
-    socket->setNonblocking();
-    if ( !socket->connect( ip, port ) ) {
-        throw std::runtime_error( "socket connect failed" );
+#ifndef USE_TCP
+    socket_ = std::make_unique<UdpSocket>();
+    socket_->setNonblocking();
+#else
+    socket_ = std::make_unique<Socket>();
+#endif
+    if ( !socket_->connect( ip, port ) ) {
+        throw std::runtime_error( "socket_ connect failed" );
     }
-
-    kcp = ikcp_create( conv, socket.get() );
+#ifndef USE_TCP
+    kcp = ikcp_create( conv, socket_.get() );
     ikcp_setoutput( kcp, util::kcp_output );
+#endif
 }
 
 Client::~Client()
 {
+#ifndef USE_TCP
     ikcp_release( kcp );
+#endif
 }
 
 void Client::setmode( int mode )
 {
+#ifndef USE_TCP
     util::ikcp_set_mode( kcp, mode );
     md = mode;
+#endif
 }
 
 void Client::send( const char * data, size_t len )
@@ -50,15 +59,19 @@ void Client::send( const char * data, size_t len )
         printf( "Send idx:%u sn:%u size:%u\n", idx, sn - 1, len + 12 );
     }
     memcpy( &buff[12], data, len );
+#ifndef USE_TCP
     ikcp_send( kcp, buff, len + 12 );
     ikcp_update( kcp, util::iclock() );
+#else
+    socket_->send( buff, len + 12 );
+#endif
 }
 
 void Client::input()
 {
     std::string writeBuffer;
     while ( is_running ) {
-        printf( "Please enter a string to send to server(%s:%d):\n", socket->getRemoteIp(), socket->getRemotePort() );
+        printf( "Please enter a string to send to server(%s:%d):\n", socket_->getRemoteIp(), socket_->getRemotePort() );
 
         writeBuffer.clear();
         std::getline( std::cin, writeBuffer );
@@ -102,10 +115,14 @@ void Client::recv( const char * data, size_t len )
 void Client::run()
 {
     auto current_ = util::now_ms();
+#ifndef USE_TCP
     char buff[BUFFER_SIZE];
+#endif
     while ( is_running ) {
-        //  util::isleep( 1 );
+        util::isleep( 1 );
+#ifndef USE_TCP
         ikcp_update( kcp, util::iclock() );
+#endif
 
         // auto input test
         if ( auto_test && util::now_ms() - current_ >= send_interval ) {
@@ -123,24 +140,48 @@ void Client::run()
         }
 
         // recv pack
-        if ( socket->recv() < 0 ) {
+#ifndef USE_TCP
+        if ( socket_->recv() < 0 ) {
             continue;
         }
-        ikcp_input( kcp, socket->getRecvBuffer(), socket->getRecvSize() );
+        ikcp_input( kcp, socket_->getRecvBuffer(), socket_->getRecvSize() );
         bzero( buff, sizeof( buff ) );
         int rc = ikcp_recv( kcp, buff, sizeof( buff ) );
         if ( rc < 0 ) continue;
         recv( buff, rc );
+#else
+        socket_->recv();
+        if ( socket_->getRecvSize() <= 0 ) {
+            continue;
+        }
+        recv( socket_->getRecvBuffer(), socket_->getRecvSize() );
+#endif
     }
 
     /* summary */
+#ifndef USE_TCP
     if ( count > 0 )
-        printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[%d] avgrtt=%d maxrtt=%d count=%d \n",
+        printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
             idx,
             md,
             str_max_len,
-            lost_rate,
-            int( sumrtt / count ),
+            kcp->resend_cnt,
+            kcp->snd_nxt,
+            (double)kcp->resend_cnt / kcp->snd_nxt,
+            int( sumrtt / count + 1 ),
             maxrtt,
-            count );
+            count + 1 );
+#else
+    socket_->close();
+    printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
+        idx,
+        md,
+        str_max_len,
+        0,
+        0,
+        0.0f,
+        int( sumrtt / count ),
+        maxrtt,
+        count );
+#endif
 }
