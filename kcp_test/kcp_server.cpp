@@ -19,7 +19,7 @@ public:
 
     virtual ssize_t onProcess( const char * buf, size_t nbytes ) override
     {
-        printf( "%s size:%lu\n", __FUNCTION__, nbytes );
+        // printf( "%s size:%lu\n", __FUNCTION__, nbytes );
         char buf_[BUFF_SIZE];
         bzero( buf_, sizeof( buf_ ) );
         memcpy( buf_, buf, nbytes );
@@ -29,11 +29,11 @@ public:
             uint32_t sz = *(uint32_t *)( ptr_ + 8 );
 
             if ( show_data ) {
-                printf( "Recv sn:[%d] size:[%u] content:[%s]\n", sn, sz + 12, &ptr_[12] );
+                printf( "Recv fd:[%llu] sn:[%d] size:[%u] content:[%s]\n", id(), sn, sz + 12, &ptr_[12] );
             } else {
-                printf( "Recv sn:[%d] size:[%u]\n", sn, sz + 12 );
+                printf( "Recv fd:[%llu] sn:[%d] size:[%u]\n", id(), sn, sz + 12 );
             }
-            printf( "Send sn:[%d] size:[%u]\n", sn, sz + 12 );
+            // printf( "Send sn:[%d] size:[%u]\n", sn, sz + 12 );
             send( ptr_, sz + 12 );
             ptr_ += ( 12 + sz ); // ptr move forward
         }

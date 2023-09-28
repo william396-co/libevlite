@@ -173,9 +173,8 @@ void Client::run()
             count + 1 );
 #else
     socket_->close();
-    printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
+    printf( "\nIDX=[%d] MODE=[TCP] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
         idx,
-        md,
         str_max_len,
         0,
         0,

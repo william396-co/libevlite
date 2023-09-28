@@ -77,7 +77,7 @@ int main( int argc, char ** argv )
 
     std::unique_ptr<Client> client = std::make_unique<Client>( ip.c_str(), port, conv );
     client->setmode( mode );
-    client->setauto( true, test_times, max_len );
+    client->setauto( false, test_times, max_len );
     client->setlostrate( lost_rate );
     client->setsendinterval( send_interval );
     // client->set_show_info( true );

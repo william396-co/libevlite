@@ -155,13 +155,16 @@ kcp_server: io.o kcp_server.o $(OBJS)
 kcp_multi_client: io.o kcp_multi_client.o client.o udpsocket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) 
 
-tcp: tcp_client tcp_server
+tcp: tcp_client tcp_server tcp_multi_client
 
-tcp_client: io.o kcp_client.o client.o udpsocket.o socket.o util.o random_util.o $(OBJS)
+tcp_client: io.o kcp_client.o client.o socket.o util.o random_util.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS)
 
 tcp_server: io.o kcp_server.o $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS)
+
+tcp_multi_client: io.o kcp_multi_client.o client.o socket.o util.o random_util.o $(OBJS)
+	$(CXX) $^ -o $@ $(CXXFLAGS) 
 
 clean :
 	rm -rf *.o
@@ -178,7 +181,7 @@ clean :
 	rm -rf chatroom_client chatroom_server
 	rm -rf test_multicurl test_addtimer echoclient echostress raw_echoserver echoserver pingpong echoserver-lock iothreads_dispatcher redis_client pingpong_client
 	rm -rf kcp_server kcp_client kcp_multi_client
-	rm -rf tcp_server tcp_client
+	rm -rf tcp_server tcp_client tcp_multi_client
 
 # --------------------------------------------------------
 #
