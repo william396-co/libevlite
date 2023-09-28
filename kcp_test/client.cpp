@@ -18,13 +18,16 @@ Client::Client( const char * ip, uint16_t port, uint32_t conv )
 {
 #ifndef USE_TCP
     socket_ = std::make_unique<UdpSocket>();
-    socket_->setNonblocking();
 #else
     socket_ = std::make_unique<Socket>();
+    socket_->setNonblocking();
 #endif
     if ( !socket_->connect( ip, port ) ) {
         throw std::runtime_error( "socket_ connect failed" );
     }
+#ifdef USE_TCP
+    socket_->setNonblocking();
+#endif
 #ifndef USE_TCP
     kcp = ikcp_create( conv, socket_.get() );
     ikcp_setoutput( kcp, util::kcp_output );
@@ -118,6 +121,7 @@ void Client::run()
 #ifndef USE_TCP
     char buff[BUFFER_SIZE];
 #endif
+
     while ( is_running ) {
         util::isleep( 1 );
 #ifndef USE_TCP
@@ -159,8 +163,8 @@ void Client::run()
     }
 
     /* summary */
-#ifndef USE_TCP
     if ( count > 0 )
+#ifndef USE_TCP
         printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
             idx,
             md,
@@ -172,7 +176,7 @@ void Client::run()
             maxrtt,
             count + 1 );
 #else
-    socket_->close();
+        socket_->close();
     printf( "\nIDX=[%d] MODE=[TCP] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
         idx,
         str_max_len,

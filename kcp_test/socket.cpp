@@ -43,7 +43,6 @@ bool Socket::connect( const char * ip, uint16_t port )
     m_remote_addr.sin_addr.s_addr = inet_addr( ip );
 
     setSocketopt();
-    setNonblocking();
     int rc = ::connect( m_fd, (struct sockaddr *)&m_remote_addr, sizeof( m_remote_addr ) );
     if ( rc == -1 && errno != EINTR && errno != EINPROGRESS ) { // Ignore EINTR/EINPROGRESS
         close();
