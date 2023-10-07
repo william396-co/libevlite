@@ -28,6 +28,9 @@ public:
             uint32_t sn = *(uint32_t *)ptr_;
             uint32_t sz = *(uint32_t *)( ptr_ + 8 );
 
+            if ( sz + 12 > nbytes )
+                break;
+
             if ( show_data ) {
                 printf( "Recv fd:[%llu] sn:[%d] size:[%u] content:[%s]\n", id(), sn, sz + 12, &ptr_[12] );
             } else {
