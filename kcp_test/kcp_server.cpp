@@ -5,6 +5,7 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <string>
 
 #include "io.h"
 
@@ -19,26 +20,36 @@ public:
 
     virtual ssize_t onProcess( const char * buf, size_t nbytes ) override
     {
-        // printf( "%s size:%lu\n", __FUNCTION__, nbytes );
-        char buf_[BUFF_SIZE];
-        bzero( buf_, sizeof( buf_ ) );
-        memcpy( buf_, buf, nbytes );
-        char * ptr_ = buf_;
-        while ( size_t( ptr_ - buf_ ) < nbytes ) {
-            uint32_t sn = *(uint32_t *)ptr_;
-            uint32_t sz = *(uint32_t *)( ptr_ + 8 );
 
-            if ( sz + 12 > nbytes )
+        if ( buf && nbytes ) {
+            read_buffer.append( buf, nbytes );
+            recv_bytes += nbytes;
+        }
+
+        // printf( "%s size:%lu\n", __FUNCTION__, nbytes );
+        char * ptr_ = read_buffer.data();
+        while ( recv_bytes > 0 ) {
+            uint32_t sn = *(uint32_t *)ptr_;
+            uint32_t sz = *(uint32_t *)( ptr_ + 8 ) + 12;
+
+            if ( sz > recv_bytes )
                 break;
 
             if ( show_data ) {
-                printf( "Recv fd:[%llu] sn:[%d] size:[%u] content:[%s]\n", id(), sn, sz + 12, &ptr_[12] );
+                printf( "Recv fd:[%llu] sn:[%d] size:[%u] content:[%s]\n", id(), sn, sz, &ptr_[12] );
             } else {
-                printf( "Recv fd:[%llu] sn:[%d] size:[%u]\n", id(), sn, sz + 12 );
+                printf( "Recv fd:[%llu] sn:[%d] size:[%u]\n", id(), sn, sz );
             }
-            // printf( "Send sn:[%d] size:[%u]\n", sn, sz + 12 );
-            send( ptr_, sz + 12 );
-            ptr_ += ( 12 + sz ); // ptr move forward
+            // printf( "Send sn:[%d] size:[%u]\n", sn, sz );
+            send( ptr_, sz );
+            ptr_ += sz; // ptr move forward
+            recv_bytes -= sz;
+        }
+
+        if ( recv_bytes == 0 ) {
+            read_buffer.clear();
+        } else {
+            read_buffer.substr( read_buffer.size() - recv_bytes );
         }
         return nbytes;
     }
@@ -73,6 +84,8 @@ public:
 private:
     int lost_rate = 0;
     bool show_data = false;
+    std::string read_buffer;
+    uint32_t recv_bytes = 0;
 };
 
 class ListenSession : public IIOService
@@ -117,9 +130,9 @@ int main( int argc, char ** argv )
     printf( "Usage: <%s> port:<%d> starting running\n", argv[0], port );
 
 #ifndef USE_TCP
-    if ( !listen->listen( NetType::KCP, "127.0.0.1", port, nullptr ) ) {
+    if ( !listen->listen( NetType::KCP, "0.0.0.0", port, nullptr ) ) {
 #else
-    if ( !listen->listen( NetType::TCP, "127.0.0.1", port, nullptr ) ) {
+    if ( !listen->listen( NetType::TCP, "0.0.0.0", port, nullptr ) ) {
 #endif
 
         printf( "server listen [%d] failed\n", port );
