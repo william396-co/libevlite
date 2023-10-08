@@ -9,8 +9,7 @@
 
 void rand_str( std::string & str, size_t max = 2000 )
 {
-    size_t sz = random( 8, max );
-    str = random_string( sz );
+    str = random_string( max - 500, max );
 }
 
 Client::Client( const char * ip, uint16_t port, uint32_t conv )
@@ -86,11 +85,21 @@ void Client::input()
 
 void Client::recv( const char * data, size_t len )
 {
-    char * ptr_ = (char *)data;
-    while ( size_t( ptr_ - data ) < len ) {
+    if ( data && len ) {
+        m_readBuffer.append( data, len );
+        m_recvBytes += len;
+    }
+
+    char * ptr_ = m_readBuffer.data();
+    while ( m_recvBytes > 0 ) {
+
         uint32_t sn_ = *(uint32_t *)( ptr_ );
         uint32_t ts_ = *(uint32_t *)( ptr_ + 4 );
         uint32_t sz_ = *(uint32_t *)( ptr_ + 8 ) + 12;
+
+        if ( sz_ > m_recvBytes ) {
+            break;
+        }
 
         uint32_t rtt_ = util::iclock() - ts_;
         if ( sn_ != (uint32_t)next ) {
@@ -112,6 +121,13 @@ void Client::recv( const char * data, size_t len )
             is_running = false;
         }
         ptr_ += sz_;
+        m_recvBytes -= sz_;
+    }
+
+    if ( m_recvBytes == 0 ) {
+        m_readBuffer.clear();
+    } else {
+        m_readBuffer.substr( m_readBuffer.size() - m_recvBytes );
     }
 }
 

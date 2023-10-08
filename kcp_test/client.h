@@ -75,4 +75,6 @@ private:
     bool show_info = false;
     bool is_running = true;
     int idx = 0;
+    std::string m_readBuffer;
+    uint32_t m_recvBytes = 0;
 };

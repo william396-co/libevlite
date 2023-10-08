@@ -18,10 +18,10 @@ int random_default() {
 	return e();
 }
 
-string random_string(int len) {
+string random_string(int beg, int end) {
 	string res;
-	int temp = random(0, len);
-	while (temp--) {
+	int sz= random(beg, end);
+	while (sz--) {
 		res.push_back(random(0, 26) + 'a');
 	}
 	return res;
