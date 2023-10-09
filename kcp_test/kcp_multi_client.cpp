@@ -2,6 +2,9 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <future>
+#include <functional>
+#include <algorithm>
 
 #include "client.h"
 #include "joining_thread.h"
@@ -12,7 +15,8 @@ constexpr auto default_max_len = 2000;
 constexpr auto default_test_times = 10;
 constexpr auto default_lost_rate = 0;
 constexpr auto default_send_interval = 30; // ms
-constexpr auto default_client_cnt = 10;
+constexpr auto default_thread_cnt = 10;
+constexpr auto clients_per_thread = 1; 
 
 bool g_running = true;
 
@@ -38,6 +42,24 @@ std::unique_ptr<Client> start_client( const char * ip, uint16_t port, int mode, 
     return client;
 }
 
+void work( int client_cnt, const char * ip, uint16_t port, int mode, int max_len, int test_times, int lost_rate, int interval = default_send_interval )
+{
+    std::vector<std::unique_ptr<Client>> clients;
+    for ( int i = 0; i != client_cnt; ++i ) {
+        clients.emplace_back( start_client( ip, port, mode, max_len, test_times, lost_rate, interval ) );
+    }
+
+    while ( g_running ) {
+        for ( auto const & c : clients ) {
+            c->run();
+        }
+    }
+
+    for ( auto const & c : clients ) {
+        c->terminate();
+    }
+}
+
 int main( int argc, char ** argv )
 {
     handle_signal();
@@ -49,30 +71,21 @@ int main( int argc, char ** argv )
     int test_times = default_test_times;
     int lost_rate = default_lost_rate;
     int send_interval = default_send_interval;
-    int client_cnt = default_client_cnt;
+    int thread_cnt = default_thread_cnt;
 
     if ( argc > 1 ) {
-        client_cnt = atoi( argv[1] );
+        thread_cnt = atoi( argv[1] );
     }
 
-    printf( "Usage:<%s> ClientCount:%d\n", argv[0], client_cnt );
-
-    std::vector<std::unique_ptr<Client>> clients;
-    for ( int i = 0; i != client_cnt; ++i ) {
-        clients.push_back( start_client( ip.c_str(), port, mode, max_len, test_times, lost_rate, send_interval ) );
-    }
+    printf( "Usage:<%s> ThreadCount:%d\n", argv[0], thread_cnt);
 
     std::vector<joining_thread> threads;
-    for ( int i = 0; i != client_cnt; ++i ) {
-        threads.emplace_back( &Client::run, clients[i].get() );
+    for ( int i = 0; i != thread_cnt; ++i ) {
+        threads.emplace_back( work, clients_per_thread, ip.c_str(), port, mode, max_len, test_times, lost_rate, send_interval );
     }
 
     while ( g_running ) {
         std::this_thread::sleep_for( std::chrono::milliseconds { 1 } );
-    }
-
-    for ( int i = 0; i != client_cnt; ++i ) {
-        clients[i]->terminate();
     }
 
     return 0;
