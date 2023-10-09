@@ -27,14 +27,13 @@ void handle_signal()
     signal( SIGTERM, signal_handler );
 }
 
-std::unique_ptr<Client> start_client( int idx, const char * ip, uint16_t port, int mode, int max_len, int test_times, int lost_rate, int interval = default_send_interval )
+std::unique_ptr<Client> start_client( const char * ip, uint16_t port, int mode, int max_len, int test_times, int lost_rate, int interval = default_send_interval )
 {
     std::unique_ptr<Client> client = std::make_unique<Client>( ip, port, conv );
     client->setmode( mode );
     client->setauto( true, test_times, max_len );
     client->setlostrate( lost_rate );
     client->setsendinterval( interval );
-    client->set_index( idx );
     // client->set_show_info( true );
     return client;
 }
@@ -60,7 +59,7 @@ int main( int argc, char ** argv )
 
     std::vector<std::unique_ptr<Client>> clients;
     for ( int i = 0; i != client_cnt; ++i ) {
-        clients.push_back( start_client( i + 1, ip.c_str(), port, mode, max_len, test_times, lost_rate, send_interval ) );
+        clients.push_back( start_client( ip.c_str(), port, mode, max_len, test_times, lost_rate, send_interval ) );
     }
 
     std::vector<joining_thread> threads;

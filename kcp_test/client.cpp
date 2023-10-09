@@ -53,9 +53,9 @@ void Client::send( const char * data, size_t len )
     ( (uint32_t *)buff )[2] = (uint32_t)len;
 
     if ( show_info ) {
-        printf( "Send idx:%d sn:%u size:%u content {%s}\n", idx, sn - 1, len + 12, data );
+        printf( "Send fd:%d sn:%u size:%u content {%s}\n", socket_->getFd(), sn - 1, len + 12, data );
     } else {
-        printf( "Send idx:%u sn:%u size:%u\n", idx, sn - 1, len + 12 );
+        printf( "Send fd:%u sn:%u size:%u\n", socket_->getFd(), sn - 1, len + 12 );
     }
     memcpy( &buff[12], data, len );
 #ifndef USE_TCP
@@ -99,6 +99,9 @@ void Client::recv( const char * data, size_t len )
         }
 
         uint32_t rtt_ = util::iclock() - ts_;
+        if(add_delay){
+            rtt_ += random(60,125);
+        }
         if ( sn_ != (uint32_t)next ) {
             printf( "ERROR sn %u<-> next=%d\n", sn, next );
             is_running = false;
@@ -109,9 +112,9 @@ void Client::recv( const char * data, size_t len )
         maxrtt = rtt_ > maxrtt ? rtt_ : maxrtt;
 
         if ( show_info )
-            printf( "[RECV] idx:%u mode=%d sn:%d rrt:%d size:%u  content: {%s}\n", idx, md, sn_, rtt_, sz_, (char *)&ptr_[12] );
+            printf( "[RECV] fd:%u mode=%d sn:%d rrt:%d size:%u  content: {%s}\n", socket_->getFd(), md, sn_, rtt_, sz_, (char *)&ptr_[12] );
         else
-            printf( "[RECV] idx:%u mode=%d sn:%d rrt:%d size:%u \n", idx, md, sn_, rtt_, sz_ );
+            printf( "[RECV] fd:%u mode=%d sn:%d rrt:%d size:%u \n",socket_->getFd(), md, sn_, rtt_, sz_ );
 
         if ( next >= test_count ) {
             printf( "Finished %d times test\n", test_count );
@@ -178,8 +181,8 @@ void Client::run()
     /* summary */
     if ( count > 0 )
 #ifndef USE_TCP
-        printf( "\nIDX=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
-            idx,
+        printf( "\nFD=[%d] MODE=[%d] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
+            socket_->getFd(),
             md,
             str_max_len,
             kcp->resend_cnt,
@@ -190,8 +193,8 @@ void Client::run()
             count + 1 );
 #else
         socket_->close();
-    printf( "\nIDX=[%d] MODE=[TCP] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
-        idx,
+    printf( "\nFD=[%d] MODE=[TCP] DATASIZE=[%d] LOSTRATE=[{%u/%u} = %.5f] avgrtt=%d maxrtt=%d count=%d \n",
+        socket_->getFd(),
         str_max_len,
         0,
         0,

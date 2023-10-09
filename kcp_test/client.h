@@ -45,9 +45,9 @@ public:
         is_running = false;
     }
 
-    void set_index( int idx_ )
+    void set_delay( bool delay )
     {
-        idx = idx_;
+        add_delay = delay;
     }
 
 private:
@@ -74,7 +74,7 @@ private:
     uint32_t maxrtt = 0;
     bool show_info = false;
     bool is_running = true;
-    int idx = 0;
     std::string m_readBuffer;
     uint32_t m_recvBytes = 0;
+    bool add_delay = false;
 };
