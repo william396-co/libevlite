@@ -24,9 +24,6 @@ Client::Client( const char * ip, uint16_t port, uint32_t conv )
     if ( !socket_->connect( ip, port ) ) {
         throw std::runtime_error( "socket_ connect failed" );
     }
-#ifdef USE_TCP
-    socket_->setNonblocking();
-#endif
 #ifndef USE_TCP
     kcp = ikcp_create( conv, socket_.get() );
     ikcp_setoutput( kcp, util::kcp_output );
