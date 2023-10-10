@@ -40,15 +40,20 @@ public:
     {
         show_info = show_;
     }
+    void set_show_detail( bool show_ )
+    {
+        show_detail = show_;
+    }
     void terminate()
     {
         is_running = false;
     }
-
     void set_delay( bool delay )
     {
         add_delay = delay;
     }
+
+    int getFd() const { return socket_->getFd(); }
 
 private:
     void send( const char * data, size_t len );
@@ -73,6 +78,7 @@ private:
     uint32_t count = 0;
     uint32_t maxrtt = 0;
     bool show_info = false;
+    bool show_detail = false;
     bool is_running = true;
     std::string m_readBuffer;
     uint32_t m_recvBytes = 0;

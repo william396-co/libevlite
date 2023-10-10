@@ -18,11 +18,12 @@ int random_default() {
 	return e();
 }
 
-string random_string(int beg, int end) {
-	string res;
-	int sz= random(beg, end);
-	while (sz--) {
-		res.push_back(random(0, 26) + 'a');
-	}
-	return res;
+string random_string( int beg, int end ){
+
+    int sz = random( beg, end );
+    string res( (size_t)sz, random( 0, 26 ) + 'a' );
+     /*while (sz--) {
+          res.push_back(random(0, 26) + 'a');
+     }*/
+     return res;
 }

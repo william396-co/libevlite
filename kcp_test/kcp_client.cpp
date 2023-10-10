@@ -1,18 +1,20 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 #include "client.h"
 #include "joining_thread.h"
 
 constexpr auto default_ip = "127.0.0.1";
 constexpr auto default_port = 9527;
-constexpr auto default_max_len = 500;
+constexpr auto default_max_len = 2000;
 constexpr auto default_test_times = 1000;
 constexpr auto default_lost_rate = 0;
-constexpr auto default_send_interval = 30; // ms
+constexpr auto default_send_interval = 80; // ms
 
 bool g_running = true;
+std::mutex coutMutex;
 
 void signal_handler( int sig )
 {
@@ -77,10 +79,12 @@ int main( int argc, char ** argv )
 
     std::unique_ptr<Client> client = std::make_unique<Client>( ip.c_str(), port, conv );
     client->setmode( mode );
-    client->setauto( false, test_times, max_len );
+    client->setauto( true, test_times, max_len );
     client->setlostrate( lost_rate );
     client->setsendinterval( send_interval );
-    // client->set_show_info( true );
+    client->set_show_info( true );
+  //  client->set_show_detail(true);
+  //  client->set_delay( true );
 
     joining_thread work( &Client::run, client.get() );
     joining_thread input( &Client::input, client.get() );
