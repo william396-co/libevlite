@@ -26,7 +26,7 @@ public:
             recv_bytes += nbytes;
         }
 
-      //  printf( "%s size:%lu\n", __FUNCTION__, nbytes );
+        //printf( "%s size:%lu\n", __FUNCTION__, nbytes );
         char * ptr_ = read_buffer.data();
         while ( recv_bytes > 12 ) {
             uint32_t sn = *(uint32_t *)ptr_;
@@ -37,11 +37,11 @@ public:
 
             if ( show_data ) {
                 if ( show_detail )
-                    printf( "Recv fd:[%llu] sn:[%d] size:[%u] content:[%s]\n", id(), sn, sz, &ptr_[12] );
+                    printf( "Recv fd:[%llu] port:[%d] sn:[%d] size:[%u] content:[%s]\n", id(), port(), sn, sz, &ptr_[12] );
                 else
-                    printf( "Recv fd:[%llu] sn:[%d] size:[%u]\n", id(), sn, sz );
+                    printf( "Recv fd:[%llu] port:[%d] sn:[%d] size:[%u]\n", id(), port(), sn, sz );
             }
-        //    printf( "Send sn:[%d] size:[%u]\n", sn, sz );
+           // printf( "Send sn:[%d] size:[%u]\n", sn, sz );
             send( ptr_, sz );
             ptr_ += sz; // ptr move forward
             recv_bytes -= sz;
@@ -105,7 +105,7 @@ public:
 
     virtual IIOSession * onAccept( sid_t id, NetType type, uint16_t listen_port, const char * host, uint16_t port ) override
     {
-        printf( "%ld, [%s:%d]\n", id, host, port );
+        printf( "sid: %ld,connected by [%s:%d]\n", id, host, port );
         auto s = new ClientSession();
         s->set_lost_rate( 10 );
         s->set_show_data( true );
