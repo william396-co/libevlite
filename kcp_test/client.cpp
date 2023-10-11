@@ -118,7 +118,7 @@ void Client::recv( const char * data, size_t len )
             if ( show_detail )
                 printf( "[RECV] fd:%u mode=%d sn:%d rrt:%d size:%u  content: {%s}\n", socket_->getFd(), md, sn_, rtt_, sz_, (char *)&ptr_[12] );
             else
-                printf( "[RECV] fd:%u mode=%d sn:%d rrt:%d size:%u \n", socket_->getFd(), md, sn_, rtt_, sz_ );
+                printf( "[RECV] fd:%u port:%d mode=%d sn:%d rrt:%d size:%u \n", socket_->getFd(),socket_->getLocalPort(),  md, sn_, rtt_, sz_ );
         }
 
         if ( next >= test_count ) {
@@ -138,30 +138,28 @@ void Client::recv( const char * data, size_t len )
 
 void Client::run()
 {
-    auto current_ = util::now_ms();
+    //auto current_ = util::now_ms();
 #ifndef USE_TCP
     char buff[BUFFER_SIZE];
 #endif
 
+    auto auto_send = [&]() {
+        std::string writeBuffer;
+        rand_str( writeBuffer, str_max_len );
+        if ( !writeBuffer.empty() ) {
+            send( writeBuffer.data(), writeBuffer.size() );
+        }
+    };
+    bool is_first = true;
     while ( is_running ) {
-        std::this_thread::sleep_for( std::chrono::milliseconds { 2 } );
+        std::this_thread::sleep_for( std::chrono::milliseconds { 1 } );
 #ifndef USE_TCP
         ikcp_update( kcp, util::iclock() );
 #endif
-
-        // auto input test
-        if ( auto_test && util::now_ms() - current_ >= send_interval ) {
-            if ( sn >= test_count ) {
-                printf( "finished auto send times=%d\n", sn );
-                auto_test = false;
-            }
-
-            current_ = util::now_ms();
-            std::string writeBuffer;
-            rand_str( writeBuffer, str_max_len );
-            if ( !writeBuffer.empty() ) {
-                send( writeBuffer.data(), writeBuffer.size() );
-            }
+        // first send
+        if ( auto_test && is_first ) {
+            auto_send();
+            is_first = false;
         }
 
         // recv pack
@@ -181,6 +179,10 @@ void Client::run()
         }
         recv( socket_->getRecvBuffer(), socket_->getRecvSize() );
 #endif
+        // after recevied then send back
+        if ( auto_test && !is_first ) {
+            auto_send();
+        }
     }
 
     /* summary */

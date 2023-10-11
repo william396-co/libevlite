@@ -5,16 +5,14 @@
 #include <future>
 #include <functional>
 #include <algorithm>
-#include <iostream>
-#include <mutex>
 
 #include "client.h"
 #include "joining_thread.h"
 
-constexpr auto default_ip = "127.0.0.1";
+constexpr auto default_ip = "172.28.1.13";
 constexpr auto default_port = 9527;
 constexpr auto default_max_len = 1000;
-constexpr auto default_test_times = 100;
+constexpr auto default_test_times = 1000;
 constexpr auto default_lost_rate = 0;
 constexpr auto default_send_interval = 60; // ms
 constexpr auto default_thread_cnt = 10;
@@ -22,7 +20,6 @@ constexpr auto clients_per_thread = 1;
 
 static bool g_running = true;
 
-std::mutex coutMutex;
 
 void signal_handler( int sig )
 {
@@ -42,36 +39,11 @@ std::unique_ptr<Client> start_client( const char * ip, uint16_t port, int mode, 
     client->setauto( true, test_times, max_len );
     client->setlostrate( lost_rate );
     client->setsendinterval( interval );
-    // client->set_show_info( true );
-    //    client->set_delay( true );
+    client->set_show_info( true );
+    //  client->set_show_detail( true );
+    // client->set_delay( true );
     return client;
 }
-
-/*
-void work( int client_cnt, const char * ip, uint16_t port, int mode, int max_len, int test_times, int lost_rate, int interval = default_send_interval )
-{
-    std::vector<std::unique_ptr<Client>> clients;
-    for ( int i = 0; i != client_cnt; ++i ) {
-        clients.emplace_back( start_client( ip, port, mode, max_len, test_times, lost_rate, interval ) );
-    }
-
-    for ( auto & c : clients ) {
-        printf( "threadid: %d fd:%d\n", std::this_thread::get_id(), c->getFd() );
-    }
-    while ( g_running ) {
-        std::this_thread::sleep_for( std::chrono::milliseconds { 2 } );
-        for ( auto & c : clients ) {
-            if ( !c->is_terminate() )
-                c->run();
-        }
-    }
-
-    for ( auto const & c : clients ) {
-        if ( !c->is_terminate() ) {
-            c->terminate();
-        }
-    }
-}*/
 
 int main( int argc, char ** argv )
 {

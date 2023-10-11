@@ -1,7 +1,6 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
-#include <mutex>
 
 #include "client.h"
 #include "joining_thread.h"
@@ -11,10 +10,9 @@ constexpr auto default_port = 9527;
 constexpr auto default_max_len = 2000;
 constexpr auto default_test_times = 1000;
 constexpr auto default_lost_rate = 0;
-constexpr auto default_send_interval = 80; // ms
+constexpr auto default_send_interval = 50; // ms
 
 bool g_running = true;
-std::mutex coutMutex;
 
 void signal_handler( int sig )
 {
