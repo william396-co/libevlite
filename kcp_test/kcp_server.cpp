@@ -18,40 +18,40 @@ class ClientSession : public IIOSession
 public:
     virtual ~ClientSession() override {}
 
+    virtual int32_t onStart() override
+    {
+        setTimeout( 10 );
+        return 0;
+    }
+
     virtual ssize_t onProcess( const char * buf, size_t nbytes ) override
     {
 
-        if ( buf && nbytes ) {
-            read_buffer.append( buf, nbytes );
-            recv_bytes += nbytes;
-        }
-
-        //printf( "%s size:%lu\n", __FUNCTION__, nbytes );
-        char * ptr_ = read_buffer.data();
-        while ( recv_bytes > 12 ) {
-            uint32_t sn = *(uint32_t *)ptr_;
-            uint32_t sz = *(uint32_t *)( ptr_ + 8 ) + 12;
-
-            if ( sz > recv_bytes )
+        ssize_t nprocess = 0;
+        while ( true ) {
+            size_t nleft = nbytes - nprocess;
+            const char * ptr = buf + nprocess;
+            if ( nleft < 12 ) {
                 break;
+            }
+            uint32_t sn = *(uint32_t *)ptr;
+            uint32_t sz = *(uint32_t *)( ptr + 8 ) + 12;
+
+            if ( nleft < sz ) {
+                break;
+            }
 
             if ( show_data ) {
                 if ( show_detail )
-                    printf( "Recv fd:[%llu] port:[%d] sn:[%d] size:[%u] content:[%s]\n", id(), port(), sn, sz, &ptr_[12] );
+                    printf( "Recv fd:[%llu] port:[%d] sn:[%d] size:[%u] content:[%s]\n", id(), port(), sn, sz, &ptr[12] );
                 else
                     printf( "Recv fd:[%llu] port:[%d] sn:[%d] size:[%u]\n", id(), port(), sn, sz );
             }
-           // printf( "Send sn:[%d] size:[%u]\n", sn, sz );
-            send( ptr_, sz );
-            ptr_ += sz; // ptr move forward
-            recv_bytes -= sz;
+
+            send( ptr, sz );
+            nprocess += sz;
         }
 
-        if ( recv_bytes == 0 ) {
-            read_buffer.clear();
-        } else {
-            read_buffer.substr( read_buffer.size() - recv_bytes );
-        }
         return nbytes;
     }
 
@@ -91,8 +91,6 @@ private:
     int lost_rate = 0;
     bool show_data = false;
     bool show_detail = false;
-    std::string read_buffer;
-    uint32_t recv_bytes = 0;
 };
 
 class ListenSession : public IIOService
@@ -108,7 +106,7 @@ public:
         printf( "sid: %ld,connected by [%s:%d]\n", id, host, port );
         auto s = new ClientSession();
         s->set_lost_rate( 10 );
-        s->set_show_data( true );
+       // s->set_show_data( true );
         //  s->set_show_detail( true );
         //  s->setWindowSize( 128, 128 );
         return s;

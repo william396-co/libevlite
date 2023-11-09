@@ -191,6 +191,6 @@ clean :
 	$(CC) $(CFLAGS) -Wno-unused-function -c $^ -o $@
 
 %.o : %.cpp
-	$(CXX) $(CXXFLAGS) -DUSE_TCP -std=c++17 -Wno-unused-function -Ikcp_test -Itest/ -Iexamples/ -c $^ -o $@
+	$(CXX) $(CXXFLAGS) -std=c++17 -Wno-unused-function -Ikcp_test -Itest/ -Iexamples/ -c $^ -o $@
 
 VPATH = src:include:test:examples:kcp_test
